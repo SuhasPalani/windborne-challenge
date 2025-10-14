@@ -6,18 +6,27 @@ const AIInsights = ({ aiData }) => {
   const [answer, setAnswer] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleAskQuestion = async (e) => {
-    e.preventDefault();
-    if (!question.trim()) return;
+  const predefinedQuestions = [
+    'What are the optimal conditions for balloon deployment?',
+    'Which regions have the best weather conditions?',
+    'What patterns do you see in the altitude distribution?',
+    'Are there any concerning weather conditions?',
+    'What recommendations do you have for flight operations?'
+  ];
+
+  const handleAskQuestion = async (questionText) => {
+    if (!questionText.trim()) return;
 
     setLoading(true);
     try {
-      const response = await apiService.askAIQuestion(question);
+      const response = await apiService.askAIQuestion(questionText);
       setAnswer(response);
+      setQuestion('');
     } catch (error) {
+      console.error('Error asking question:', error);
       setAnswer({
-        question,
-        answer: `Error: ${error.message}`,
+        question: questionText,
+        answer: 'Sorry, there was an error processing your question.',
         timestamp: new Date().toISOString()
       });
     } finally {
@@ -25,52 +34,66 @@ const AIInsights = ({ aiData }) => {
     }
   };
 
-  const predefinedQuestions = [
-    "What are the optimal conditions for balloon deployment?",
-    "Which regions have the most stable weather patterns?",
-    "How does altitude affect data collection quality?",
-    "What patterns do you see in the flight data?"
-  ];
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleAskQuestion(question);
+  };
 
   return (
     <div className="ai-insights">
-      <h2>🤖 AI-Powered Insights</h2>
+      <h2>🤖 AI Insights</h2>
 
-      {aiData && !aiData.error && (
-        <div className="insights-container">
-          <h3>Automated Analysis</h3>
-          <div className="insights-list">
-            {aiData.insights.map((insight, index) => (
-              <div key={index} className="insight-item">
-                <span className="insight-number">{index + 1}</span>
-                <p>{insight}</p>
-              </div>
-            ))}
-          </div>
-          {aiData.timestamp && (
-            <p className="insights-timestamp">
-              Generated: {new Date(aiData.timestamp).toLocaleString()}
-            </p>
-          )}
-        </div>
-      )}
-
-      {aiData && aiData.error && (
+      {aiData?.error ? (
         <div className="ai-error">
           <p>⚠️ AI insights unavailable: {aiData.error}</p>
-          <p className="error-note">Make sure you've set up your Gemini API key in the backend .env file.</p>
+          <p className="error-note">Check that your Gemini API key is configured correctly.</p>
         </div>
+      ) : (
+        <>
+          {aiData?.insights && aiData.insights.length > 0 && (
+            <div className="insights-container">
+              <h3>Key Insights</h3>
+              <div className="insights-list">
+                {aiData.insights.map((insight, index) => (
+                  <div key={index} className="insight-item">
+                    <div className="insight-number">{index + 1}</div>
+                    <p>{insight}</p>
+                  </div>
+                ))}
+              </div>
+              {aiData.timestamp && (
+                <p className="insights-timestamp">
+                  Generated: {new Date(aiData.timestamp).toLocaleTimeString()}
+                </p>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       <div className="ai-question-section">
-        <h3>Ask AI About the Data</h3>
+        <h3>Ask AI a Question</h3>
         
-        <form onSubmit={handleAskQuestion} className="question-form">
+        <div className="predefined-questions">
+          <p className="suggestions-label">Quick questions:</p>
+          {predefinedQuestions.map((q, index) => (
+            <button
+              key={index}
+              className="suggestion-button"
+              onClick={() => handleAskQuestion(q)}
+              disabled={loading}
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="question-form">
           <input
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask a question about the balloon or weather data..."
+            placeholder="Or ask your own question..."
             className="question-input"
             disabled={loading}
           />
@@ -79,34 +102,18 @@ const AIInsights = ({ aiData }) => {
             className="ask-button"
             disabled={loading || !question.trim()}
           >
-            {loading ? 'Thinking...' : 'Ask AI'}
+            {loading ? '🤔 Thinking...' : '💬 Ask'}
           </button>
         </form>
 
-        <div className="predefined-questions">
-          <p className="suggestions-label">Try these questions:</p>
-          {predefinedQuestions.map((q, index) => (
-            <button
-              key={index}
-              className="suggestion-button"
-              onClick={() => setQuestion(q)}
-              disabled={loading}
-            >
-              {q}
-            </button>
-          ))}
-        </div>
-
         {answer && (
           <div className="ai-answer">
-            <div className="answer-question">
+            <p className="answer-question">
               <strong>Q:</strong> {answer.question}
-            </div>
-            <div className="answer-text">
-              <strong>A:</strong> {answer.answer}
-            </div>
+            </p>
+            <p className="answer-text">{answer.answer}</p>
             <p className="answer-timestamp">
-              {new Date(answer.timestamp).toLocaleString()}
+              {new Date(answer.timestamp).toLocaleTimeString()}
             </p>
           </div>
         )}

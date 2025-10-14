@@ -16,11 +16,15 @@ class BalloonService {
           validateStatus: (status) => status === 200
         });
 
+        console.log(`Fetched ${hour}.json - Type: ${typeof response.data}, IsArray: ${Array.isArray(response.data)}`);
+
+        let balloons = [];
+
+        // Handle different response formats
         if (Array.isArray(response.data)) {
-          // Parse balloon data
-          const balloons = response.data.map((item, index) => {
+          balloons = response.data.map((item, index) => {
             try {
-              // Handle different data formats
+              // Format 1: Array [lat, lon, altitude]
               if (Array.isArray(item) && item.length >= 3) {
                 return {
                   id: `balloon-${hour}-${index}`,
@@ -31,20 +35,68 @@ class BalloonService {
                   timestamp: new Date(Date.now() - i * 3600000).toISOString()
                 };
               }
+              // Format 2: Object {lat, lon, altitude} or {latitude, longitude, altitude}
+              else if (typeof item === 'object' && item !== null) {
+                const lat = item.lat || item.latitude;
+                const lon = item.lon || item.longitude || item.long || item.lng;
+                const altitude = item.altitude || item.alt || item.height;
+
+                if (lat !== undefined && lon !== undefined && altitude !== undefined) {
+                  return {
+                    id: `balloon-${hour}-${index}`,
+                    lat: parseFloat(lat),
+                    lon: parseFloat(lon),
+                    altitude: parseFloat(altitude),
+                    hoursAgo: i,
+                    timestamp: new Date(Date.now() - i * 3600000).toISOString()
+                  };
+                }
+              }
               return null;
             } catch (err) {
+              console.error(`Error parsing balloon ${hour}-${index}:`, err.message);
               return null;
             }
-          }).filter(b => b !== null && !isNaN(b.lat) && !isNaN(b.lon));
-
-          allData.push({
-            hour: hour,
-            hoursAgo: i,
-            balloons: balloons,
-            count: balloons.length
-          });
+          }).filter(b => b !== null && !isNaN(b.lat) && !isNaN(b.lon) && !isNaN(b.altitude));
         }
+        // Handle if response.data is an object with a balloons array
+        else if (typeof response.data === 'object' && response.data !== null) {
+          if (response.data.balloons && Array.isArray(response.data.balloons)) {
+            balloons = response.data.balloons.map((item, index) => {
+              try {
+                const lat = item.lat || item.latitude;
+                const lon = item.lon || item.longitude || item.long || item.lng;
+                const altitude = item.altitude || item.alt || item.height;
+
+                if (lat !== undefined && lon !== undefined && altitude !== undefined) {
+                  return {
+                    id: `balloon-${hour}-${index}`,
+                    lat: parseFloat(lat),
+                    lon: parseFloat(lon),
+                    altitude: parseFloat(altitude),
+                    hoursAgo: i,
+                    timestamp: new Date(Date.now() - i * 3600000).toISOString()
+                  };
+                }
+                return null;
+              } catch (err) {
+                return null;
+              }
+            }).filter(b => b !== null && !isNaN(b.lat) && !isNaN(b.lon) && !isNaN(b.altitude));
+          }
+        }
+
+        console.log(`Parsed ${balloons.length} balloons from ${hour}.json`);
+
+        allData.push({
+          hour: hour,
+          hoursAgo: i,
+          balloons: balloons,
+          count: balloons.length
+        });
+
       } catch (error) {
+        console.error(`Error fetching ${hour}.json:`, error.message);
         errors.push({
           hour: hour,
           error: error.message
@@ -54,6 +106,8 @@ class BalloonService {
 
     // Flatten all balloons
     const allBalloons = allData.flatMap(d => d.balloons);
+
+    console.log(`Total balloons collected: ${allBalloons.length}`);
 
     // Calculate statistics
     const stats = this.calculateStats(allBalloons);
@@ -70,7 +124,22 @@ class BalloonService {
   }
 
   calculateStats(balloons) {
-    if (balloons.length === 0) return null;
+    if (balloons.length === 0) {
+      return {
+        avgAltitude: '0.00',
+        maxAltitude: '0.00',
+        minAltitude: '0.00',
+        avgLat: '0.00',
+        avgLon: '0.00',
+        totalActive: 0,
+        hemispheres: {
+          northern: 0,
+          southern: 0,
+          eastern: 0,
+          western: 0
+        }
+      };
+    }
 
     const altitudes = balloons.map(b => b.altitude);
     const lats = balloons.map(b => b.lat);
@@ -94,6 +163,8 @@ class BalloonService {
 
   // Get most recent balloons for map display
   getRecentBalloons(data, hours = 1) {
+    if (!data.byHour) return [];
+    
     return data.byHour
       .filter(h => h.hoursAgo < hours)
       .flatMap(h => h.balloons);

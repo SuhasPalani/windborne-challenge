@@ -18,8 +18,16 @@ class WeatherService {
         timeout: 5000
       });
 
+      // Get better location name
+      const locationName = this.getLocationName(
+        response.data.name,
+        response.data.sys?.country,
+        lat,
+        lon
+      );
+
       return {
-        location: response.data.name || 'Unknown',
+        location: locationName,
         country: response.data.sys?.country || 'Unknown',
         temp: response.data.main?.temp,
         feelsLike: response.data.main?.feels_like,
@@ -38,6 +46,89 @@ class WeatherService {
       console.error(`Weather fetch error for ${lat},${lon}:`, error.message);
       return null;
     }
+  }
+
+  getLocationName(name, country, lat, lon) {
+    // If we have a valid city name, use it
+    if (name && name !== '' && name !== 'Unknown') {
+      return country && country !== 'Unknown' ? `${name}, ${country}` : name;
+    }
+
+    // Otherwise, determine region from coordinates
+    const latAbs = Math.abs(lat);
+    const region = this.getRegionFromCoordinates(lat, lon);
+    
+    return country && country !== 'Unknown' ? `${region}, ${country}` : region;
+  }
+
+  getRegionFromCoordinates(lat, lon) {
+    // Polar regions
+    if (lat > 66) return 'Arctic Ocean';
+    if (lat < -66) return 'Antarctic Ocean';
+
+    // Pacific Ocean regions
+    if (lon >= -180 && lon < -70) {
+      if (lat > 0) return 'North Pacific Ocean';
+      return 'South Pacific Ocean';
+    }
+
+    // Atlantic Ocean regions
+    if (lon >= -70 && lon < -20) {
+      if (lat > 0) return 'North Atlantic Ocean';
+      return 'South Atlantic Ocean';
+    }
+
+    // Indian Ocean
+    if (lon >= 20 && lon < 120 && lat < 0) {
+      return 'Indian Ocean';
+    }
+
+    // Continents (rough approximations)
+    // North America
+    if (lat >= 15 && lat < 72 && lon >= -168 && lon < -52) {
+      if (lat > 55) return 'Northern Canada/Alaska';
+      if (lon < -100) return 'Western North America';
+      return 'Eastern North America';
+    }
+
+    // South America
+    if (lat >= -56 && lat < 15 && lon >= -82 && lon < -34) {
+      if (lat < -20) return 'Southern South America';
+      if (lon > -60) return 'Eastern South America';
+      return 'Western South America';
+    }
+
+    // Europe
+    if (lat >= 36 && lat < 72 && lon >= -10 && lon < 40) {
+      if (lat > 60) return 'Northern Europe';
+      if (lon < 15) return 'Western Europe';
+      return 'Eastern Europe';
+    }
+
+    // Africa
+    if (lat >= -35 && lat < 38 && lon >= -18 && lon < 52) {
+      if (lat > 15) return 'Northern Africa';
+      if (lat < -10) return 'Southern Africa';
+      return 'Central Africa';
+    }
+
+    // Asia
+    if (lat >= -10 && lat < 72 && lon >= 26 && lon < 180) {
+      if (lat > 50) return 'Northern Asia';
+      if (lon < 75) return 'Middle East/Central Asia';
+      if (lon > 135) return 'East Asia';
+      return 'South Asia';
+    }
+
+    // Australia/Oceania
+    if (lat >= -45 && lat < -10 && lon >= 110 && lon < 180) {
+      if (lon > 160) return 'South Pacific Islands';
+      return 'Australia/Oceania';
+    }
+
+    // Default for any uncategorized regions
+    if (lat > 0) return 'Northern Hemisphere Waters';
+    return 'Southern Hemisphere Waters';
   }
 
   async getWeatherForBalloons(balloons, limit = 10) {
@@ -59,9 +150,9 @@ class WeatherService {
   selectRepresentativeBalloons(balloons, limit) {
     if (balloons.length <= limit) return balloons;
 
-    // Select balloons from different regions
+    // Select balloons from different regions for geographic diversity
     const sorted = [...balloons].sort((a, b) => {
-      // Sort by lat and lon to get geographic diversity
+      // Create a grid system: divide world into 30° lat and 60° lon blocks
       const aKey = Math.floor(a.lat / 30) * 100 + Math.floor(a.lon / 60);
       const bKey = Math.floor(b.lat / 30) * 100 + Math.floor(b.lon / 60);
       return aKey - bKey;
