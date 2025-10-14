@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const BalloonList = ({ balloons }) => {
   const [filter, setFilter] = useState('all');
@@ -55,7 +55,6 @@ const BalloonList = ({ balloons }) => {
   const getLocationName = (lat, lon) => {
     // Determine general region based on coordinates
     const latAbs = Math.abs(lat);
-    const lonAbs = Math.abs(lon);
     
     // Ocean regions
     if (lat > 0 && lon > -180 && lon < -30) return 'North Atlantic';
