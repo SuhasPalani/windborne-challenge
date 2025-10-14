@@ -1,0 +1,151 @@
+{
+  "info": {
+    "name": "WindBorne Systems Application",
+    "description": "API collection for testing and submitting WindBorne application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Local Testing",
+      "item": [
+        {
+          "name": "Get All Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/data",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "data"]
+            }
+          }
+        },
+        {
+          "name": "Get Balloon Data Only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/balloons",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "balloons"]
+            }
+          }
+        },
+        {
+          "name": "Ask AI Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What are the optimal conditions for balloon deployment?\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/ai/question",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "ai", "question"]
+            }
+          }
+        },
+        {
+          "name": "Clear Cache",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/cache/clear",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "cache", "clear"]
+            }
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WindBorne Original API",
+      "item": [
+        {
+          "name": "Get Current Balloon Positions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://a.windbornesystems.com/treasure/00.json",
+              "protocol": "https",
+              "host": ["a", "windbornesystems", "com"],
+              "path": ["treasure", "00.json"]
+            }
+          }
+        },
+        {
+          "name": "Get 1 Hour Ago",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://a.windbornesystems.com/treasure/01.json",
+              "protocol": "https",
+              "host": ["a", "windbornesystems", "com"],
+              "path": ["treasure", "01.json"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Application Submission",
+      "item": [
+        {
+          "name": "Submit Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"career_application\": {\n    \"name\": \"YOUR_FULL_NAME\",\n    \"email\": \"your.email@example.com\",\n    \"role\": \"Junior Web Developer\",\n    \"notes\": \"I excel at building intuitive, data-driven interfaces and thrive in collaborative, fast-paced environments where I can directly impact operations. I chose OpenWeatherMap because correlating balloon atmospheric readings with ground-based weather stations enables powerful data quality validation and reveals atmospheric patterns critical for optimizing flight operations and achieving global coverage.\",\n    \"submission_url\": \"https://your-deployed-app.vercel.app\",\n    \"portfolio_url\": \"https://github.com/yourname/your-best-project\",\n    \"resume_url\": \"https://drive.google.com/file/d/YOUR_RESUME_ID/view\"\n  }\n}"
+            },
+            "url": {
+              "raw": "https://windbornesystems.com/career_applications.json",
+              "protocol": "https",
+              "host": ["windbornesystems", "com"],
+              "path": ["career_applications.json"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
