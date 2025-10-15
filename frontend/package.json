@@ -2,7 +2,6 @@
   "name": "windborne-frontend",
   "version": "1.0.0",
   "private": true,
-  
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -12,12 +11,12 @@
     "axios": "^1.6.0",
     "recharts": "^2.10.0"
   },
-
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "vercel-build": "react-scripts build"
   },
   "eslintConfig": {
     "extends": [
@@ -35,7 +34,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  
-  "proxy": "http://localhost:5000"
+  }
 }
